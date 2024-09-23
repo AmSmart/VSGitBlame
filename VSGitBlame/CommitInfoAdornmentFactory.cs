@@ -2,7 +2,6 @@
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Primitives;
-using System.Windows.Input;
 
 namespace VSGitBlame;
 
@@ -23,10 +22,4 @@ internal sealed class CommitInfoAdornmentFactory : IWpfTextViewCreationListener
     }
 
 
-    private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        // Handle the click event here
-        System.Windows.MessageBox.Show("Text editor clicked!");
-    }
 }
-

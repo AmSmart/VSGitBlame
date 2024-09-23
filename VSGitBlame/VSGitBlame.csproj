@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="CommitInfoAdornment.cs" />
     <Compile Include="CommitInfoAdornmentFactory.cs" />
+    <Compile Include="CommitInfoViewFactory.cs" />
     <Compile Include="GitBlamer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VSGitBlamePackage.cs" />

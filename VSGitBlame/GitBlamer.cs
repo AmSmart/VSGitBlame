@@ -13,7 +13,7 @@ internal static class GitBlamer
         if (!_gitBlameCache.ContainsKey(filePath))
             InitialiseFile(filePath);
 
-        return _gitBlameCache[filePath].GetBlameAt(line);
+        return _gitBlameCache[filePath].GetAt(line);
     }
 
     static string GetBlameCommand(string filePath) =>
@@ -37,6 +37,6 @@ internal static class GitBlamer
         result = process.StandardOutput.ReadToEnd();
         process.WaitForExit();
 
-        _gitBlameCache[filePath] = FileBlameInfo.CreateFromPorcelainOutput(result);
+        _gitBlameCache[filePath] = new FileBlameInfo(result);
     }
 }
