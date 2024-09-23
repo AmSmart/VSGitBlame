@@ -55,7 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="CommitInfoCache.cs" />
     <Compile Include="CommitInfo.cs" />
     <Compile Include="FileBlameInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -177,16 +177,15 @@ public class Program
                 	}
                 """;
 
-        var x = FileBlameInfo.CreateFromPorcelainOutput(output);
-        int lineCount = output.Split(Environment.NewLine).Length;
+        var fileBlameInfo = new FileBlameInfo(output);
 
         int i = 1;
-        var commitInfo = x.GetBlameAt(i);
+        var commitInfo = fileBlameInfo.GetAt(i);
 
         while(commitInfo != null)
         {
             Console.WriteLine($"Line {i}: {commitInfo.AuthorName}");
-            commitInfo = x.GetBlameAt(++i);
+            commitInfo = fileBlameInfo.GetAt(++i);
         }
     }
 }
