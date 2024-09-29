@@ -5,8 +5,8 @@ Quick Blame allows you to blame any line of code in your repo simply by clicking
 
 ## Usage
 
-![Demo Gif](Resources/demo.gif)
+![Demo Gif](VSGitBlame/Resources/demo.gif)
 
 ## License
 
-[MIT](./Resources/LICENSE)
+[MIT](VSGitBlame/Resources/LICENSE)
