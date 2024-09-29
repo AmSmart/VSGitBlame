@@ -20,6 +20,4 @@ internal sealed class CommitInfoAdornmentFactory : IWpfTextViewCreationListener
     {
         new CommitInfoAdornment(textView);
     }
-
-
 }

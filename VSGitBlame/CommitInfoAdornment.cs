@@ -7,13 +7,11 @@ using System.Windows.Input;
 
 namespace VSGitBlame;
 
-// TODO: Validate that the last commit is still valid for data stored
-
 public class CommitInfoAdornment
 {
     readonly IWpfTextView _view;
     readonly IAdornmentLayer _adornmentLayer;
-
+    readonly ITextDocument _textDocument;
 
     public CommitInfoAdornment(IWpfTextView view)
     {
@@ -21,6 +19,13 @@ public class CommitInfoAdornment
         _adornmentLayer = view.GetAdornmentLayer("CommitInfoAdornment");
         _view.LayoutChanged += OnLayoutChanged;
         _view.VisualElement.MouseLeftButtonUp += VisualElement_MouseLeftButtonUp;
+        _textDocument = _view.TextBuffer.Properties.GetProperty<ITextDocument>(typeof(ITextDocument));
+        _textDocument.FileActionOccurred += TextDocument_FileActionOccurred;
+    }
+
+    private void TextDocument_FileActionOccurred(object sender, TextDocumentFileActionEventArgs e)
+    {
+        GitBlamer.InvalidateCache(_textDocument.FilePath);
     }
 
     private void VisualElement_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -51,8 +56,7 @@ public class CommitInfoAdornment
         var textView = _view.GetTextViewLineContainingBufferPosition(textViewLine.End);
         int lineNumber = textViewLine.Start.GetContainingLineNumber();
 
-        string filePath = _view.TextBuffer.Properties.GetProperty<ITextDocument>(typeof(ITextDocument)).FilePath;
-        var commitInfo = GitBlamer.GetBlame(filePath, lineNumber + 1);
+        var commitInfo = GitBlamer.GetBlame(_textDocument.FilePath, lineNumber + 1);
 
         if (commitInfo == null)
             return;
@@ -76,8 +80,8 @@ public class CommitInfoAdornment
 
     void ShowCommitInfo(CommitInfo commitInfo, ITextViewLine line)
     {
-        double top = line.Top - 50 < 0 ? 0 : line.Top - 50;
-        var container = CommitInfoViewFactory.Get(commitInfo);
+        double top = line.Top - 52 < 0 ? 0 : line.Top - 52;
+        var container = CommitInfoViewFactory.Get(commitInfo, _adornmentLayer);
 
         Canvas.SetLeft(container, line.Right);
         Canvas.SetTop(container, top);

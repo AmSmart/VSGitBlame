@@ -8,35 +8,45 @@ internal static class GitBlamer
 {
     static Dictionary<string, FileBlameInfo> _gitBlameCache = new();
 
+    public static void InvalidateCache(string filePath) =>
+        _gitBlameCache.Remove(filePath);
+
     public static CommitInfo GetBlame(string filePath, int line)
     {
-        if (!_gitBlameCache.ContainsKey(filePath))
-            InitialiseFile(filePath);
+        if (_gitBlameCache.TryGetValue(filePath, out var fileBlameInfo) == false)
+            fileBlameInfo = InitialiseFile(filePath);
 
-        return _gitBlameCache[filePath].GetAt(line);
+        if (fileBlameInfo == null)
+            return null;
+
+        return fileBlameInfo.GetAt(line);
     }
 
-    static string GetBlameCommand(string filePath) =>
-        $"git blame {filePath} --porcelain";
-
-    static void InitialiseFile(string filePath)
+    
+    static FileBlameInfo InitialiseFile(string filePath)
     {
-        string command = GetBlameCommand(filePath);
+        string command = $"git blame {filePath} --porcelain";
 
-        ProcessStartInfo processStartInfo = new ProcessStartInfo("cmd", "/c " + command)
+        using Process process = new Process();
+        process.StartInfo = new ProcessStartInfo("cmd", "/c " + command)
         {
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
-
-        string result = string.Empty;
-        using Process process = new Process();
-        process.StartInfo = processStartInfo;
         process.Start();
-        result = process.StandardOutput.ReadToEnd();
+        string result = process.StandardOutput.ReadToEnd();
         process.WaitForExit();
 
-        _gitBlameCache[filePath] = new FileBlameInfo(result);
+        if (string.IsNullOrEmpty(result) || process.ExitCode != 0)
+        {
+            _gitBlameCache[filePath] = null;
+            return null;
+        }
+
+        var blameInfo = new FileBlameInfo(result);
+        _gitBlameCache[filePath] = blameInfo;
+
+        return blameInfo;
     }
 }

@@ -1,15 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace VSGitBlame.Core;
 
 public class FileBlameInfo
 {
     Dictionary<int, string> _lineCommitCache;
+    static readonly string[] _timeZoneFormats = [@"\+hhmm", @"\-hhmm"];
 
-    public FileBlameInfo(string porecelainBlameString)
+    public FileBlameInfo(string porcelainBlameString)
     {
-        _lineCommitCache = ParsePorcelainOutput(porecelainBlameString);
+        Dictionary<int, string> output = null;
+        try
+        {
+            output = ParsePorcelainOutput(porcelainBlameString);
+        }
+        catch
+        {
+            // TODO: Stop silent failure and implement logging/telemetry
+            output = new();
+        }
+
+        _lineCommitCache = output;
     }
 
 
@@ -30,7 +43,7 @@ public class FileBlameInfo
 
         ReadOnlySpan<char> lines = output.AsSpan();
         ReadOnlySpan<char> space = " ".AsSpan();
-        ReadOnlySpan<char> previous = "previous".AsSpan();
+        ReadOnlySpan<char> filename = "filename".AsSpan();
         ReadOnlySpan<char> newLine;
         bool scanComplete = false;
 
@@ -86,10 +99,8 @@ public class FileBlameInfo
                     lines.CropTillNth(newLine);
                 
                     line.CropTillNth(space);
-                    if (line[0] == '+')
-                        line = line.Slice(1);
                     string timeZone = line.ToString();
-                    TimeSpan timeZoneOffset = TimeSpan.ParseExact(timeZone, "hhmm", null);
+                    TimeSpan timeZoneOffset = TimeSpan.ParseExact(timeZone, _timeZoneFormats, CultureInfo.InvariantCulture);
                     dateTimeOffset = dateTimeOffset.ToOffset(timeZoneOffset);
 
                     lines.CropTillNth(newLine, 4);
@@ -107,11 +118,15 @@ public class FileBlameInfo
                     };
 
                     CommitInfoCache.Add(hash, commitInfo);
-                    commitHashes.Add(hash);
                 }
 
-                int cropCount = lines.Slice(0, previous.Length).SequenceEqual(previous) ? 3 : 2;
-                lines.CropTillNth(newLine, cropCount);
+                int linesToCrop = 3;
+                line = lines.SliceTill(space);
+                if (line.SequenceEqual(filename))
+                    linesToCrop = 2;
+
+                lines.CropTillNth(newLine, linesToCrop);
+                commitHashes.Add(hash);
             }
             else
             {

@@ -1,5 +1,4 @@
 ﻿using Microsoft.VisualStudio.PlatformUI;
-using Microsoft.VisualStudio.Text.Editor;
 using System.Windows;
 using System;
 using System.Windows.Controls;
@@ -7,6 +6,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using VSGitBlame.Core;
 using System.Linq;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace VSGitBlame;
 
@@ -19,6 +19,7 @@ public static class CommitInfoViewFactory
 
     static bool _firstMouseMoveFired = false;
     static bool _isDetailsVisible = false;
+    static IAdornmentLayer _adornmentLayer;
 
 
     static CommitInfoViewFactory()
@@ -60,7 +61,7 @@ public static class CommitInfoViewFactory
         var infoViewContainer = new Border
         {
             BorderThickness = new Thickness(1),
-            BorderBrush = Brushes.LightGreen,
+            BorderBrush = Brushes.Transparent,
             Visibility = Visibility.Hidden,
             Padding = new Thickness(2)
         };
@@ -107,8 +108,21 @@ public static class CommitInfoViewFactory
         #endregion
     }
 
-    public static Border Get(CommitInfo commitInfo)
+    public static Border Get(CommitInfo commitInfo, IAdornmentLayer adornmentLayer)
     {
+        if (_adornmentLayer != null)
+        {
+            if (_adornmentLayer != adornmentLayer)
+            {
+                _adornmentLayer.RemoveAllAdornments();
+                _adornmentLayer = adornmentLayer;
+            }
+        }
+        else
+        {
+            _adornmentLayer = adornmentLayer;
+        }
+
         _summaryView.Text = $"{commitInfo.AuthorName}, {commitInfo.Time:yyyy/MM/dd HH:mm} • {commitInfo.Summary}";
         _profileIcon.Source = new BitmapImage(new Uri(GetGravatarUrl(commitInfo.AuthorEmail), UriKind.Absolute));
         _commitDetailsView.Text =
