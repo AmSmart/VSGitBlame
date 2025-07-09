@@ -57,10 +57,7 @@
     <Compile Include="VSGitBlamePackage.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\CHANGELOG.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
+    <None Include="extension.manifest.json" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>

@@ -34,7 +34,7 @@ internal static class GitBlamer
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true,
-            StandardOutputEncoding = System.Text.Encoding.UTF8
+            StandardOutputEncoding = System.Text.Encoding.UTF8,
             WorkingDirectory = Path.GetDirectoryName(filePath)
         };
         process.Start();

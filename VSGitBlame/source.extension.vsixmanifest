@@ -1,11 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="VSGitBlame.9271c3e4-d49d-4c53-8675-cbe1e4f0e794" Version="1.0.1" Language="en-US" Publisher="Emmanuel Adebiyi" />
+        <Identity Id="VSGitBlame.9271c3e4-d49d-4c53-8675-cbe1e4f0e794" Version="1.0.2" Language="en-US" Publisher="Emmanuel Adebiyi" />
         <DisplayName>Quick Blame</DisplayName>
         <Description xml:space="preserve">Blame lines of code in your Git repos at a glance</Description>
         <License>Resources\LICENSE.txt</License>
-        <ReleaseNotes>Resources\CHANGELOG.html</ReleaseNotes>
         <Icon>Resources\icon.ico</Icon>
         <PreviewImage>Resources\logo.png</PreviewImage>
     </Metadata>

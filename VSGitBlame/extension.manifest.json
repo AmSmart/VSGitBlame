@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json.schemastore.org/vsix-publish",
+  "categories": [
+    "source control"
+  ],
+  "identity": {
+    "internalName": "vs-quick-blame"
+  },
+  "overview": "README.md",
+  "priceCategory": "free",
+  "publisher": "EmmanuelAdebiyi",
+  "private": false,
+  "qna": true,
+  "repo": "https://github.com/AmSmart/VSGitBlame",
+  "tags": []
+}
+// Readme needs to use remote links so as to render properly on the marketplace
