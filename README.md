@@ -9,4 +9,4 @@ Quick Blame allows you to blame any line of code in your repo simply by clicking
 
 ## License
 
-[MIT](VSGitBlame/Resources/LICENSE)
+[MIT](VSGitBlame/Resources/LICENSE.txt)

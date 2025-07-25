@@ -22,8 +22,9 @@ public static class CommitInfoViewFactory
 
     static bool _firstMouseMoveFired = false;
     static bool _isDetailsVisible = false;
+    static bool _isDetailsEnabled = false;
     static IAdornmentLayer _adornmentLayer;
-    
+
     private static VSGitBlamePackage _package;
     private static CommitInfoViewOptions _options;
 
@@ -61,17 +62,17 @@ public static class CommitInfoViewFactory
             if (_options.SummaryFontColor != Color.Transparent)
             {
                 _summaryView.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(
-                    _options.SummaryFontColor.A, 
-                    _options.SummaryFontColor.R, 
-                    _options.SummaryFontColor.G, 
+                    _options.SummaryFontColor.A,
+                    _options.SummaryFontColor.R,
+                    _options.SummaryFontColor.G,
                     _options.SummaryFontColor.B));
             }
             else
             {
                 // Use theme detection if no specific color is set
                 var backgroundColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey);
-                _summaryView.Foreground = backgroundColor.GetBrightness() > 0.5 ? 
-                    Brushes.DarkBlue : 
+                _summaryView.Foreground = backgroundColor.GetBrightness() > 0.5 ?
+                    Brushes.DarkBlue :
                     Brushes.LightGray;
             }
         }
@@ -87,6 +88,7 @@ public static class CommitInfoViewFactory
         {
             // Apply background color setting
             _detailsViewContainer.Background = _options.GetDetailsBackgroundBrush();
+            _isDetailsEnabled = _options.DetailsVisibility;
         }
     }
 
@@ -156,8 +158,11 @@ public static class CommitInfoViewFactory
             if (_isDetailsVisible)
                 return;
 
-            _detailsViewContainer.Visibility = Visibility.Visible;
-            _isDetailsVisible = true;
+            if (_isDetailsEnabled)
+            {
+                _detailsViewContainer.Visibility = Visibility.Visible;
+                _isDetailsVisible = true;
+            }
         };
 
         rootPanel.MouseLeave += (sender, e) =>

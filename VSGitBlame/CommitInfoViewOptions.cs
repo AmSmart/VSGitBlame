@@ -1,7 +1,5 @@
 using Microsoft.VisualStudio.Shell;
-using System;
 using System.ComponentModel;
-using System.Drawing;
 using System.Windows;
 using System.Windows.Media;
 using Color = System.Drawing.Color;
@@ -26,6 +24,12 @@ public class CommitInfoViewOptions : DialogPage
     #endregion
 
     #region Details View Settings
+    [Category(CategoryDisplay)]
+    [DisplayName("Details Visibility")]
+    [Description("Enable details view")]
+    [DefaultValue(false)]
+    public bool DetailsVisibility { get; set; } = false;
+
     [Category(CategoryDisplay)]
     [DisplayName("Details Font Size")]
     [Description("Font size for the details view")]
