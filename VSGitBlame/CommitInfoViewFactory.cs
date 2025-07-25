@@ -196,7 +196,7 @@ public static class CommitInfoViewFactory
             $"""
             {commitInfo.AuthorName} | {commitInfo.Time:f}
             {commitInfo.Summary}
-            Commit: {commitInfo.Hash.Substring(7)}
+            Commit: {commitInfo.Hash.Substring(0, 7)}
             """;
         _container.Visibility = Visibility.Visible;
 
