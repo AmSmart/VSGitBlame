@@ -22,6 +22,7 @@ public static class CommitInfoViewFactory
 
     static bool _firstMouseMoveFired = false;
     static bool _isDetailsVisible = false;
+    static bool _showDetails = false;
     static IAdornmentLayer _adornmentLayer;
     
     private static VSGitBlamePackage _package;
@@ -153,7 +154,7 @@ public static class CommitInfoViewFactory
                 return;
             }
 
-            if (_isDetailsVisible)
+            if (_isDetailsVisible || _showDetails == false)
                 return;
 
             _detailsViewContainer.Visibility = Visibility.Visible;
@@ -190,14 +191,26 @@ public static class CommitInfoViewFactory
             _adornmentLayer = adornmentLayer;
         }
 
-        _summaryView.Text = $"{commitInfo.AuthorName}, {commitInfo.Time:yyyy/MM/dd HH:mm} • {commitInfo.Summary}";
-        _profileIcon.Source = new BitmapImage(new Uri(GetGravatarUrl(commitInfo.AuthorEmail), UriKind.Absolute));
-        _commitDetailsView.Text =
-            $"""
+        if (commitInfo.ShowDetails == false)
+        {
+            _summaryView.Text = commitInfo.Summary;
+            _profileIcon.Source = null;
+            _commitDetailsView.Text = string.Empty;
+            _detailsViewContainer.Visibility = Visibility.Hidden;
+        }
+        else
+        {
+            _summaryView.Text = $"{commitInfo.AuthorName}, {commitInfo.Time:yyyy/MM/dd HH:mm} • {commitInfo.Summary}";
+            _profileIcon.Source = new BitmapImage(new Uri(GetGravatarUrl(commitInfo.AuthorEmail), UriKind.Absolute));
+            _commitDetailsView.Text =
+                $"""
             {commitInfo.AuthorName} | {commitInfo.Time:f}
             {commitInfo.Summary}
             Commit: {commitInfo.Hash.Substring(7)}
             """;
+        }
+
+        _showDetails = commitInfo.ShowDetails;
         _container.Visibility = Visibility.Visible;
 
         return _container;

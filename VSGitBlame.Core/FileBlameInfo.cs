@@ -6,23 +6,21 @@ namespace VSGitBlame.Core;
 
 public class FileBlameInfo
 {
-    Dictionary<int, string> _lineCommitCache;
+    private static readonly Dictionary<int, string> defaultEmptyLineCollection = new(0);
+
+    Dictionary<int, string> _lineCommitCache = defaultEmptyLineCollection;
     static readonly string[] _timeZoneFormats = [@"\+hhmm", @"\-hhmm"];
 
-    public FileBlameInfo(string porcelainBlameString)
+    public void Parse(string porcelainBlameString)
     {
-        Dictionary<int, string> output = null;
         try
         {
-            output = ParsePorcelainOutput(porcelainBlameString);
+            _lineCommitCache = ParsePorcelainOutput(porcelainBlameString);
         }
         catch
         {
             // TODO: Stop silent failure and implement logging/telemetry
-            output = new();
         }
-
-        _lineCommitCache = output;
     }
 
 
@@ -79,6 +77,11 @@ public class FileBlameInfo
                 {
                     lines.CropTillNth(newLine, 9);
                 }
+                else if (int.TryParse(hash, out int zeroHash) && zeroHash == 0)
+                {
+                    CommitInfoCache.Add(hash, CommitInfo.Uncommitted);
+                    lines.CropTillNth(newLine, 9);
+                }
                 else
                 {
                     line = lines.SliceTill(newLine);
@@ -97,7 +100,7 @@ public class FileBlameInfo
 
                     line = lines.SliceTill(newLine);
                     lines.CropTillNth(newLine);
-                
+
                     line.CropTillNth(space);
                     string timeZone = line.ToString();
                     TimeSpan timeZoneOffset = TimeSpan.ParseExact(timeZone, _timeZoneFormats, CultureInfo.InvariantCulture);

@@ -1,31 +1,41 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+
 using VSGitBlame.Core;
 
 namespace VSGitBlame;
 
 internal static class GitBlamer
 {
-    static Dictionary<string, FileBlameInfo> _gitBlameCache = new();
+    private static ConcurrentDictionary<string, FileBlameInfo> _gitBlameCache = new();
+    public static EventHandler<string> OnBlameFinished;
 
-    public static void InvalidateCache(string filePath) =>
-        _gitBlameCache.Remove(filePath);
+    public static void InvalidateCache(string filePath)
+    {
+        _gitBlameCache.TryRemove(filePath, out _);
+    }
+
 
     public static CommitInfo GetBlame(string filePath, int line)
     {
-        if (_gitBlameCache.TryGetValue(filePath, out var fileBlameInfo) == false)
-            fileBlameInfo = InitialiseFile(filePath);
+        if (_gitBlameCache.TryGetValue(filePath, out FileBlameInfo fileBlameInfo))
+            return fileBlameInfo != null ? fileBlameInfo.GetAt(line) : CommitInfo.InProgress;
 
-        if (fileBlameInfo == null)
-            return null;
+        var curContext = SynchronizationContext.Current;
+        _ = InitialiseFileAsync(filePath);
 
-        return fileBlameInfo.GetAt(line);
+        return CommitInfo.InProgress;
     }
 
     
-    static FileBlameInfo InitialiseFile(string filePath)
+    static async Task InitialiseFileAsync(string filePath)
     {
+        _gitBlameCache[filePath] = null;
+
         string command = $"git blame {filePath} --porcelain";
 
         using Process process = new Process();
@@ -38,18 +48,19 @@ internal static class GitBlamer
             WorkingDirectory = Path.GetDirectoryName(filePath)
         };
         process.Start();
-        string result = process.StandardOutput.ReadToEnd();
-        process.WaitForExit();
 
-        if (string.IsNullOrEmpty(result) || process.ExitCode != 0)
-        {
-            _gitBlameCache[filePath] = null;
-            return null;
-        }
+        string result = await process.StandardOutput.ReadToEndAsync();
 
-        var blameInfo = new FileBlameInfo(result);
+        // We invalidated the file during the process, so we don't need the output anymore
+        if (_gitBlameCache.ContainsKey(filePath) == false)
+            return;
+
+        var blameInfo = new FileBlameInfo();
         _gitBlameCache[filePath] = blameInfo;
 
-        return blameInfo;
+        if (process.ExitCode == 0 && string.IsNullOrEmpty(result) == false)
+            blameInfo.Parse(result);
+
+        OnBlameFinished.Invoke(null, filePath);
     }
 }

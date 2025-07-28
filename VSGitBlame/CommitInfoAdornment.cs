@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.Text.Formatting;
 using System.Windows.Controls;
 using VSGitBlame.Core;
 using System.Windows.Input;
+using System;
 
 namespace VSGitBlame;
 
@@ -21,10 +22,22 @@ public class CommitInfoAdornment
         _textDocument = _view.TextBuffer.Properties.GetProperty<ITextDocument>(typeof(ITextDocument));
 
         // Event Subscriptions
-        _view.LayoutChanged += OnLayoutChanged;
+        _view.GotAggregateFocus += (sender, args) => RefreshBlameOnCurrentLine();
+        _view.LayoutChanged += (sender, args) => RefreshBlameOnCurrentLine();
+        _view.Closed += (sender, args) => GitBlamer.OnBlameFinished -= OnBlameFinished;
+
         _textDocument.FileActionOccurred += TextDocument_FileActionOccurred;
         _view.Caret.PositionChanged += Caret_PositionChanged;
         //_view.VisualElement.MouseLeftButtonUp += VisualElement_MouseLeftButtonUp;
+
+        GitBlamer.OnBlameFinished += OnBlameFinished;
+
+        RefreshBlameOnCurrentLine();
+    }
+
+    private void RefreshBlameOnCurrentLine()
+    {
+        OnCaretLineChanged(_lastCaretLine, new CaretPositionChangedEventArgs(_view, _view.Caret.Position, _view.Caret.Position));
     }
 
     private void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e)
@@ -37,31 +50,46 @@ public class CommitInfoAdornment
         }
     }
 
-
     private void TextDocument_FileActionOccurred(object sender, TextDocumentFileActionEventArgs e)
     {
         GitBlamer.InvalidateCache(_textDocument.FilePath);
+        RefreshBlameOnCurrentLine();
+    }
+
+    private void OnBlameFinished(object sender, string filePath)
+    {
+        if (filePath != _textDocument.FilePath)
+            return;
+
+        RefreshBlameOnCurrentLine();
     }
 
     private void OnCaretLineChanged(int lineNumber, CaretPositionChangedEventArgs e)
     {
-        _adornmentLayer.RemoveAllAdornments();
-
         // Only show commit info if the document is not dirty (no unsaved changes)
         if (_textDocument.IsDirty)
+        {
+            _adornmentLayer.RemoveAllAdornments();
             return;
+        }
 
         // Get the caret position in the view
         var caretPosition = e.NewPosition.BufferPosition;
         var textViewLine = _view.GetTextViewLineContainingBufferPosition(caretPosition);
 
         if (textViewLine == null)
+        {
+            _adornmentLayer.RemoveAllAdornments();
             return;
+        }
 
-        var commitInfo = GitBlamer.GetBlame(_textDocument.FilePath, lineNumber + 1);
+        var commitInfo = GitBlamer.GetBlame(_textDocument.FilePath, Math.Max(0, lineNumber) + 1);
 
         if (commitInfo == null)
+        {
+            _adornmentLayer.RemoveAllAdornments();
             return;
+        }
 
         ShowCommitInfo(commitInfo, textViewLine);
     }
@@ -106,20 +134,6 @@ public class CommitInfoAdornment
         ShowCommitInfo(commitInfo, textView);
     }
 
-    void OnLayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
-    {
-        foreach (var line in e.NewOrReformattedLines)
-        {
-            CreateVisuals(line);
-        }
-    }
-
-    void CreateVisuals(ITextViewLine line)
-    {
-        // Clear previous adornments
-        _adornmentLayer.RemoveAllAdornments();
-    }
-
     void ShowCommitInfo(CommitInfo commitInfo, ITextViewLine line)
     {
         var container = CommitInfoViewFactory.Get(commitInfo, _adornmentLayer);
@@ -127,7 +141,6 @@ public class CommitInfoAdornment
         Canvas.SetLeft(container, line.Right);
         Canvas.SetTop(container, line.Top);
 
-        _adornmentLayer.RemoveAllAdornments();
         SnapshotSpan span = new SnapshotSpan(_adornmentLayer.TextView.TextSnapshot, Span.FromBounds(line.Start, line.End));
         _adornmentLayer.AddAdornment(AdornmentPositioningBehavior.TextRelative, span, null, container, null);
     }
