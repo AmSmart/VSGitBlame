@@ -125,7 +125,7 @@ public class CommitInfoAdornment
         var container = CommitInfoViewFactory.Get(commitInfo, _adornmentLayer);
 
         Canvas.SetLeft(container, line.Right);
-        Canvas.SetTop(container, line.Top);
+        Canvas.SetTop(container, line.TextTop);
 
         _adornmentLayer.RemoveAllAdornments();
         SnapshotSpan span = new SnapshotSpan(_adornmentLayer.TextView.TextSnapshot, Span.FromBounds(line.Start, line.End));
